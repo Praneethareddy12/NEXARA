@@ -1,0 +1,29 @@
+.course-detail-page { background: #ffffff; min-height: 100vh; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; }
+.course-nav { background: #1a2332; color: white; padding: 12px 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+.nav-container { display: flex; align-items: center; justify-content: space-between; max-width: 1400px; margin: 0 auto; width: 100%; }
+.back-btn { background: #2d3748; color: white; border: 1px solid #4a5568; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+.back-btn:hover { background: #4a5568; }
+.brand-logo { font-weight: 800; font-size: 1.2rem; color: #63b3ed; }
+
+.course-layout { display: flex; flex: 1; overflow: hidden; }
+.course-sidebar { width: 300px; border-right: 1px solid #e2e8f0; background: #f8fafc; padding: 24px; overflow-y: auto; }
+.course-sidebar h3 { font-size: 0.9rem; text-transform: uppercase; color: #718096; letter-spacing: 0.05em; margin-bottom: 20px; }
+.sidebar-item { padding: 14px 16px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; color: #4a5568; transition: 0.2s; font-size: 0.95rem; border: 1px solid transparent; }
+.sidebar-item:hover { background: #edf2f7; color: #2d3748; }
+.sidebar-item.active { background: #ebf4ff; color: #3182ce; border-color: #bee3f8; font-weight: 600; }
+
+.course-article { flex: 1; padding: 40px; overflow-y: auto; max-width: 900px; margin: 0 auto; }
+.article-header { margin-bottom: 30px; }
+.breadcrumb { font-size: 0.8rem; color: #a0aec0; text-transform: uppercase; font-weight: 600; }
+.video-container { width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 40px; }
+
+.article-content h2 { color: #2d3748; margin-top: 0; }
+.article-content p { line-height: 1.7; color: #4a5568; font-size: 1.1rem; margin-bottom: 30px; }
+
+.code-block-wrapper { background: #1a202c; border-radius: 8px; overflow: hidden; margin-bottom: 40px; }
+.code-header { background: #2d3748; color: #a0aec0; padding: 8px 16px; font-size: 0.8rem; font-family: monospace; }
+.code-block { margin: 0; padding: 20px; color: #fbd38d; font-family: 'Fira Code', monospace; overflow-x: auto; }
+
+.article-footer { border-top: 1px solid #e2e8f0; padding-top: 30px; margin-top: 50px; display: flex; justify-content: flex-end; }
+.complete-btn { background: #667eea; color: white; border: none; padding: 14px 32px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 6px rgba(102, 126, 234, 0.25); }
+.complete-btn:hover { background: #5a67d8; transform: translateY(-2px); box-shadow: 0 7px 14px rgba(102, 126, 234, 0.3); }

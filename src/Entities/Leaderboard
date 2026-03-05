@@ -1,0 +1,40 @@
+{
+  "name": "Leaderboard",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "username": {
+      "type": "string"
+    },
+    "total_xp": {
+      "type": "number"
+    },
+    "weekly_xp": {
+      "type": "number"
+    },
+    "level": {
+      "type": "number"
+    },
+    "challenges_solved": {
+      "type": "number"
+    },
+    "current_streak": {
+      "type": "number"
+    },
+    "avatar_url": {
+      "type": "string"
+    },
+    "rank": {
+      "type": "number"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": [
+    "user_email"
+  ]
+}

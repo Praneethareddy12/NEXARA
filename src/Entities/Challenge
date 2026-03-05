@@ -1,0 +1,88 @@
+{
+  "name": "Challenge",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "easy",
+        "medium",
+        "hard",
+        "legendary"
+      ]
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "python",
+        "sql",
+        "statistics",
+        "machine_learning",
+        "data_wrangling",
+        "visualization",
+        "deep_learning"
+      ]
+    },
+    "xp_reward": {
+      "type": "number"
+    },
+    "coin_reward": {
+      "type": "number"
+    },
+    "time_limit_minutes": {
+      "type": "number"
+    },
+    "problem_statement": {
+      "type": "string"
+    },
+    "dataset_url": {
+      "type": "string"
+    },
+    "starter_code": {
+      "type": "string"
+    },
+    "solution_approach": {
+      "type": "string"
+    },
+    "hints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "completion_count": {
+      "type": "number",
+      "default": 0
+    },
+    "success_rate": {
+      "type": "number",
+      "default": 0
+    },
+    "is_boss_level": {
+      "type": "boolean",
+      "default": false
+    },
+    "required_level": {
+      "type": "number",
+      "default": 1
+    }
+  },
+  "required": [
+    "title",
+    "difficulty",
+    "category",
+    "xp_reward"
+  ]
+}

@@ -1,0 +1,249 @@
+import React, { useState, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Trophy, Award, TrendingUp, Clock, Target, Zap, Flame, Edit } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import SkillRadar from '../components/common/SkillRadar';
+
+export default function Profile() {
+  const [user, setUser] = useState(null);
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => {});
+  }, []);
+
+  const { data: userProgress } = useQuery({
+    queryKey: ['userProgress', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return null;
+      const results = await base44.entities.UserProgress.filter({ user_email: user.email });
+      return results[0] || null;
+    },
+    enabled: !!user?.email
+  });
+
+  const { data: achievements } = useQuery({
+    queryKey: ['achievements'],
+    queryFn: () => base44.entities.Achievement.list()
+  });
+
+  const earnedBadges = userProgress?.badges?.map(b => b.badge_id) || [];
+  const earnedAchievements = achievements?.filter(a => earnedBadges.includes(a.badge_id)) || [];
+  const lockedAchievements = achievements?.filter(a => !earnedBadges.includes(a.badge_id)) || [];
+
+  // Mock XP progression data
+  const xpProgressionData = [
+    { week: 'Week 1', xp: 500 },
+    { week: 'Week 2', xp: 1200 },
+    { week: 'Week 3', xp: 1800 },
+    { week: 'Week 4', xp: userProgress?.total_xp || 2400 },
+  ];
+
+  const rarityColors = {
+    common: 'from-slate-400 to-slate-500',
+    rare: 'from-blue-400 to-blue-600',
+    epic: 'from-purple-400 to-purple-600',
+    legendary: 'from-yellow-400 to-orange-500'
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50 dark:from-slate-950 dark:via-indigo-950 dark:to-purple-950">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Header Card */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Card className="mb-8 border-none shadow-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32" />
+            <CardContent className="p-8 relative z-10">
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+                <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center text-4xl font-bold border-4 border-white/30">
+                  {user?.full_name?.[0]?.toUpperCase() || 'U'}
+                </div>
+                <div className="flex-1">
+                  <h1 className="text-3xl md:text-4xl font-bold mb-2">{user?.full_name || 'User'}</h1>
+                  <p className="text-white/80 mb-4">{user?.email}</p>
+                  <div className="flex flex-wrap gap-4">
+                    <div className="flex items-center gap-2">
+                      <Target className="w-5 h-5" />
+                      <span className="font-semibold">Level {userProgress?.level || 1}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Zap className="w-5 h-5" />
+                      <span className="font-semibold">{userProgress?.total_xp || 0} XP</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Flame className="w-5 h-5" />
+                      <span className="font-semibold">{userProgress?.current_streak || 0} Day Streak</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Trophy className="w-5 h-5" />
+                      <span className="font-semibold">{userProgress?.challenges_solved || 0} Challenges</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full max-w-2xl grid-cols-3 h-12">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="achievements">Achievements</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
+          </TabsList>
+
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <SkillRadar skills={userProgress?.skills || {}} />
+
+              <Card className="shadow-lg border-none">
+                <CardHeader>
+                  <CardTitle>XP Progression</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart data={xpProgressionData}>
+                      <defs>
+                        <linearGradient id="colorXP" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="week" stroke="#64748b" />
+                      <YAxis stroke="#64748b" />
+                      <Tooltip />
+                      <Area 
+                        type="monotone" 
+                        dataKey="xp" 
+                        stroke="#8b5cf6" 
+                        fillOpacity={1} 
+                        fill="url(#colorXP)" 
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Stats Overview */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card className="p-6 border-none shadow-lg">
+                <div className="text-center">
+                  <Trophy className="w-8 h-8 mx-auto mb-2 text-yellow-600" />
+                  <div className="text-3xl font-bold">{earnedAchievements.length}</div>
+                  <div className="text-sm text-slate-600 dark:text-slate-400">Badges</div>
+                </div>
+              </Card>
+              <Card className="p-6 border-none shadow-lg">
+                <div className="text-center">
+                  <Target className="w-8 h-8 mx-auto mb-2 text-indigo-600" />
+                  <div className="text-3xl font-bold">{userProgress?.completed_paths?.length || 0}</div>
+                  <div className="text-sm text-slate-600 dark:text-slate-400">Paths Done</div>
+                </div>
+              </Card>
+              <Card className="p-6 border-none shadow-lg">
+                <div className="text-center">
+                  <Flame className="w-8 h-8 mx-auto mb-2 text-orange-600" />
+                  <div className="text-3xl font-bold">{userProgress?.longest_streak || 0}</div>
+                  <div className="text-sm text-slate-600 dark:text-slate-400">Best Streak</div>
+                </div>
+              </Card>
+              <Card className="p-6 border-none shadow-lg">
+                <div className="text-center">
+                  <Clock className="w-8 h-8 mx-auto mb-2 text-purple-600" />
+                  <div className="text-3xl font-bold">{userProgress?.weekly_xp || 0}</div>
+                  <div className="text-sm text-slate-600 dark:text-slate-400">Weekly XP</div>
+                </div>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Achievements Tab */}
+          <TabsContent value="achievements" className="space-y-6">
+            {earnedAchievements.length > 0 && (
+              <div>
+                <h2 className="text-2xl font-bold mb-4">Earned Badges 🏆</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {earnedAchievements.map((achievement, i) => (
+                    <motion.div
+                      key={achievement.id}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.05 }}
+                    >
+                      <Card className={`p-6 border-none shadow-lg bg-gradient-to-br ${rarityColors[achievement.rarity]}`}>
+                        <div className="text-center text-white">
+                          <div className="text-5xl mb-3">{achievement.icon || '🏆'}</div>
+                          <h3 className="font-bold mb-1">{achievement.title}</h3>
+                          <p className="text-sm opacity-90 text-xs">{achievement.description}</p>
+                          <div className="mt-3 text-xs opacity-75 uppercase">{achievement.rarity}</div>
+                        </div>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {lockedAchievements.length > 0 && (
+              <div>
+                <h2 className="text-2xl font-bold mb-4 text-slate-400">Locked Achievements 🔒</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {lockedAchievements.map((achievement, i) => (
+                    <Card key={achievement.id} className="p-6 border-none shadow-lg opacity-50 grayscale">
+                      <div className="text-center">
+                        <div className="text-5xl mb-3 filter blur-sm">{achievement.icon || '🏆'}</div>
+                        <h3 className="font-bold mb-1 text-slate-600">{achievement.title}</h3>
+                        <p className="text-sm text-slate-500 text-xs">{achievement.description}</p>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Activity Tab */}
+          <TabsContent value="activity" className="space-y-6">
+            <Card className="border-none shadow-lg">
+              <CardHeader>
+                <CardTitle>Recent Activity</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {userProgress?.completed_challenges?.slice(0, 10).map((challenge, i) => (
+                    <div key={i} className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white">
+                          ✓
+                        </div>
+                        <div>
+                          <div className="font-semibold">Completed Challenge</div>
+                          <div className="text-sm text-slate-500">{new Date(challenge.completed_date).toLocaleDateString()}</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-indigo-600">+{challenge.xp_earned} XP</div>
+                        <div className="text-sm text-slate-500">{challenge.time_taken_minutes}m</div>
+                      </div>
+                    </div>
+                  )) || <p className="text-center text-slate-500 py-8">No activity yet. Start learning!</p>}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}

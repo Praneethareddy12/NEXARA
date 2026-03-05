@@ -1,0 +1,87 @@
+{
+  "name": "LearningPath",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Name of the learning path"
+    },
+    "description": {
+      "type": "string"
+    },
+    "icon": {
+      "type": "string"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced",
+        "expert"
+      ],
+      "default": "beginner"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "fundamentals",
+        "programming",
+        "statistics",
+        "machine_learning",
+        "deep_learning",
+        "data_engineering",
+        "specialization"
+      ]
+    },
+    "estimated_hours": {
+      "type": "number"
+    },
+    "xp_reward": {
+      "type": "number"
+    },
+    "modules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "lessons": {
+            "type": "number"
+          },
+          "duration_minutes": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "order": {
+      "type": "number"
+    },
+    "is_locked": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "title",
+    "category"
+  ]
+}

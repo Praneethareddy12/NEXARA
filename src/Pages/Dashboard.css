@@ -1,0 +1,43 @@
+.dashboard-container { background-color: #f3f5f9; min-height: 100vh; font-family: 'Segoe UI', sans-serif; }
+.navbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 40px; background: white; border-bottom: 1px solid #e5e7eb; }
+.nav-logo { font-weight: 800; font-size: 1.4rem; color: #7c3aed; display: flex; align-items: center; gap: 8px; }
+.nav-menu { display: flex; gap: 20px; }
+.nav-menu a { text-decoration: none; color: #6b7280; font-size: 0.9rem; font-weight: 500; padding: 6px 12px; border-radius: 6px; }
+.nav-menu a.active { background: #f3f4f6; color: #111827; }
+.nav-lvl-pill { background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; border: 1px solid #fde68a; margin-right: 15px; }
+
+.logout-icon-btn { background: none; border: none; color: #6b7280; cursor: pointer; display: flex; align-items: center; padding: 8px; border-radius: 8px; transition: 0.2s; }
+.logout-icon-btn:hover { background: #fee2e2; color: #ef4444; }
+
+.dashboard-main { max-width: 1200px; margin: 0 auto; padding: 30px 20px; }
+.welcome-text { color: #7c3aed; font-size: 2rem; margin-bottom: 5px; }
+.welcome-sub { color: #6b7280; margin-bottom: 30px; }
+
+.dashboard-top-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+.dashboard-mid-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 20px; }
+.dashboard-bottom-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+
+.stat-card { background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+
+.circle-progress { width: 140px; height: 140px; border-radius: 50%; border: 8px solid #f3f4f6; display: flex; justify-content: center; align-items: center; transition: background 0.5s ease; }
+.lvl-num { font-size: 2.2rem; font-weight: 800; color: #7c3aed; }
+
+.streak-card { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: white; }
+.streak-val { font-size: 3rem; font-weight: 800; }
+
+.spider-chart-container { height: 180px; position: relative; display: flex; justify-content: center; align-items: center; }
+.radar-background { position: absolute; width: 110px; height: 110px; background: #f8fafc; clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); border: 1px solid #e2e8f0; }
+.radar-value-area { position: absolute; width: 110px; height: 110px; background: rgba(124, 58, 237, 0.3); border: 2px solid #7c3aed; transition: clip-path 0.8s ease; }
+.label { position: absolute; font-size: 0.6rem; font-weight: 700; color: #94a3b8; }
+
+.mini-card { background: white; padding: 15px; border-radius: 12px; text-align: center; }
+.qa-btn { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: none; color: white; font-weight: 600; cursor: pointer; text-align: left; }
+.blue { background: #0891b2; } .pink { background: #db2777; } .red { background: #ea580c; }
+
+.centered-footer { text-align: center; padding: 60px 0 40px; width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+.progress-section { margin: 20px 0 30px 0; background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+.progress-container { width: 100%; background: #e5e7eb; border-radius: 10px; height: 12px; overflow: hidden; }
+.progress-fill { height: 100%; background: #6366f1; transition: width 0.6s ease; }
+.progress-text { margin-top: 10px; font-size: 0.9rem; font-weight: 600; color: #4b5563; text-align: center; }
+.completion-alert { background: #dcfce7; color: #166534; padding: 20px; border-radius: 12px; font-weight: bold; text-align: center; margin-bottom: 20px; border: 1px solid #bbf7d0; }

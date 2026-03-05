@@ -1,0 +1,150 @@
+{
+  "name": "UserProgress",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "total_xp": {
+      "type": "number",
+      "default": 0
+    },
+    "coins": {
+      "type": "number",
+      "default": 100
+    },
+    "level": {
+      "type": "number",
+      "default": 1
+    },
+    "current_streak": {
+      "type": "number",
+      "default": 0
+    },
+    "longest_streak": {
+      "type": "number",
+      "default": 0
+    },
+    "last_activity_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "completed_paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "completed_challenges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "challenge_id": {
+            "type": "string"
+          },
+          "completed_date": {
+            "type": "string"
+          },
+          "time_taken_minutes": {
+            "type": "number"
+          },
+          "xp_earned": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "badges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "badge_id": {
+            "type": "string"
+          },
+          "earned_date": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      }
+    },
+    "skills": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+    "weekly_xp": {
+      "type": "number",
+      "default": 0
+    },
+    "challenges_solved": {
+      "type": "number",
+      "default": 0
+    },
+    "paths_in_progress": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path_id": {
+            "type": "string"
+          },
+          "progress_percent": {
+            "type": "number"
+          },
+          "started_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "completed_modules": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "daily_quest_completed": {
+      "type": "boolean",
+      "default": false
+    },
+    "power_ups": {
+      "type": "object",
+      "properties": {
+        "hints": {
+          "type": "number",
+          "default": 3
+        },
+        "time_boost": {
+          "type": "number",
+          "default": 0
+        },
+        "skip_challenge": {
+          "type": "number",
+          "default": 0
+        }
+      }
+    },
+    "theme": {
+      "type": "string",
+      "enum": [
+        "default",
+        "dark_ocean",
+        "neon_city",
+        "forest",
+        "sunset"
+      ],
+      "default": "default"
+    },
+    "avatar_url": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_email"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "name": "DailyQuest",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "quest_type": {
+      "type": "string",
+      "enum": [
+        "complete_challenge",
+        "earn_xp",
+        "maintain_streak",
+        "learn_skill",
+        "help_peer"
+      ]
+    },
+    "target_value": {
+      "type": "number"
+    },
+    "xp_reward": {
+      "type": "number"
+    },
+    "coin_reward": {
+      "type": "number"
+    },
+    "active_date": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": [
+    "title",
+    "quest_type",
+    "xp_reward"
+  ]
+}

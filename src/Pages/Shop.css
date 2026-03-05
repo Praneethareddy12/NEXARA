@@ -1,0 +1,28 @@
+/* Standardized Navbar Styles */
+.navbar { display: flex; justify-content: space-between; padding: 1rem 5%; align-items: center; background: #ffffff; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 100; }
+.nav-left { display: flex; align-items: center; gap: 2rem; }
+.nav-logo { font-size: 1.5rem; font-weight: 800; color: #7c3aed; }
+.nav-menu { display: flex; gap: 1.5rem; }
+.nav-menu a { color: #64748b; text-decoration: none; font-size: 0.9rem; font-weight: 500; }
+.nav-menu a.active { color: #7c3aed; border-bottom: 2px solid #7c3aed; }
+.nav-right { display: flex; align-items: center; gap: 1rem; }
+.nav-lvl-pill { background: #fff7ed; color: #ea580c; padding: 6px 16px; border-radius: 20px; font-weight: 700; border: 1px solid #fed7aa; }
+.logout-icon-btn { background: none; border: none; color: #64748b; cursor: pointer; }
+
+
+.shop-container { min-height: 100vh; background: #f9fafb; }
+.shop-main { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+.shop-header { text-align: center; margin-bottom: 40px; }
+.items-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
+.item-card { background: white; padding: 25px; border-radius: 20px; border: 1px solid #e5e7eb; position: relative; transition: transform 0.2s; }
+.item-card:hover { transform: translateY(-5px); }
+.item-icon { font-size: 3rem; margin-bottom: 15px; }
+.item-price { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; border-top: 1px solid #eee; pt: 15px; }
+.item-price span { font-weight: 700; color: #f59e0b; }
+.buy-btn { background: #7c3aed; color: white; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+.buy-btn.disabled { background: #10b981; cursor: default; }
+.buy-btn.locked { background: #9ca3af; }
+.owned { border: 2px solid #10b981; }
+.owned-badge { position: absolute; top: 15px; right: 15px; background: #10b981; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; }
+.shop-alert { background: #7c3aed; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; font-weight: 600; }
+.nav-coins-pill { background: #fff7ed; color: #ea580c; padding: 6px 16px; border-radius: 20px; font-weight: 700; border: 1px solid #fed7aa; }

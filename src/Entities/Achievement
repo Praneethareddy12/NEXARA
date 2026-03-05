@@ -1,0 +1,64 @@
+{
+  "name": "Achievement",
+  "type": "object",
+  "properties": {
+    "badge_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "icon": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "learning",
+        "challenges",
+        "streak",
+        "social",
+        "mastery",
+        "special"
+      ]
+    },
+    "rarity": {
+      "type": "string",
+      "enum": [
+        "common",
+        "rare",
+        "epic",
+        "legendary"
+      ]
+    },
+    "requirement_type": {
+      "type": "string",
+      "enum": [
+        "xp_total",
+        "challenges_completed",
+        "streak_days",
+        "paths_completed",
+        "skill_level",
+        "speed_run"
+      ]
+    },
+    "requirement_value": {
+      "type": "number"
+    },
+    "xp_bonus": {
+      "type": "number"
+    },
+    "coin_reward": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "badge_id",
+    "title",
+    "category",
+    "rarity"
+  ]
+}
