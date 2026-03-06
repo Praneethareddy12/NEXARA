@@ -10,8 +10,7 @@ dotenv.config();
 
 const app = express();
 
-const progressRoutes = require('./routes/progressRoutes');
-
+import progressRoutes from './routes/progressRoutes.js';
 /* ==============================
     CONNECT TO MONGODB
 ============================== */

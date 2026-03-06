@@ -1,9 +1,12 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const progressController = require('../controllers/progressController');
-const authMiddleware = require('../middleware/auth'); // Ensure you have this middleware
+
+// Import the controller and middleware using named imports
+import * as progressController from '../controllers/progressController.js';
+import { protect } from '../middlewares/auth.middleware.js'; 
 
 // POST request to mark a challenge as complete and award XP
-router.post('/complete', authMiddleware, progressController.completeChallenge);
+// We use 'protect' here to match the named export from your middleware
+router.post('/complete', protect, progressController.completeChallenge);
 
-module.exports = router;
+export default router;
