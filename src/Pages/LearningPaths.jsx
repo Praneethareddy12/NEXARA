@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import Navbar from "../Components/Navbar";
 import "./LearningPaths.css";
 
 const pathsData = [
@@ -45,27 +46,7 @@ export default function LearningPaths() {
 
   return (
     <div className="paths-page-wrapper">
-      {/* Standardized Navbar */}
-      <nav className="navbar">
-        <div className="nav-left">
-          <div className="nav-logo">✨ Nexara</div>
-          <div className="nav-menu">
-            <a href="/home">🏠 Home</a>
-            <a href="/dashboard">📊 Dashboard</a>
-            <a href="/paths" className="active">📖 Learning Paths</a>
-            <a href="/challenges">🎯 Challenges</a>
-            <a href="/leaderboard">🏆 Leaderboard</a>
-            <a href="/shop">🛒 Shop</a>
-            <a href="/profile">👤 Profile</a>
-          </div>
-        </div>
-        <div className="nav-right">
-          <div className="nav-lvl-pill">🥇 Lvl {userStats.level}</div>
-          <button className="logout-icon-btn" onClick={handleLogout} title="Logout">
-             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-          </button>
-        </div>
-      </nav>
+      <Navbar />
 
       <main className="paths-main-content">
         <header className="paths-header-section">

@@ -14,12 +14,12 @@ const userSchema = new mongoose.Schema(
     xp: { type: Number, default: 0 },
     level: { type: Number, default: 1 },
     coins: { type: Number, default: 100 },
-    completedModules: [String], 
+    completedModules: { type: [String], default: [] }, 
     // --- New Streak & Challenge Fields ---
     streak: { type: Number, default: 0 },
     lastLoginDate: { type: Date, default: Date.now },
     bestStreak: { type: Number, default: 0 },
-    completedChallenges: [String], // Added to schema to track completed IDs
+    completedChallenges: { type: [String], default: [] },
     // --- Shop System ---
     streakFreezeActive: { type: Boolean, default: false },
     // ------------------------------

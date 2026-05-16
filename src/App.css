@@ -183,6 +183,17 @@
   box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
+/* Standardized Navbar Styles (shared) */
+.navbar { display: flex; justify-content: space-between; padding: 1rem 5%; align-items: center; background: #ffffff; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 100; }
+.nav-left { display: flex; align-items: center; gap: 2rem; }
+.nav-logo { font-size: 1.5rem; font-weight: 800; color: #7c3aed; }
+.nav-menu { display: flex; gap: 1.5rem; }
+.nav-menu a { color: #64748b; text-decoration: none; font-size: 0.9rem; font-weight: 500; }
+.nav-menu a.active { color: #7c3aed; border-bottom: 2px solid #7c3aed; }
+.nav-right { display: flex; align-items: center; gap: 1rem; }
+.nav-lvl-pill { background: #fff7ed; color: #ea580c; padding: 6px 16px; border-radius: 20px; font-weight: 700; border: 1px solid #fed7aa; }
+.logout-icon-btn { background: none; border: none; color: #64748b; cursor: pointer; }
+
 .nav-left { display: flex; align-items: center; gap: 15px; }
 .nav-logo-circle {
   background: #1a1f2c;

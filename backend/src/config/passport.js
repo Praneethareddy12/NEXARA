@@ -19,11 +19,12 @@ export default function initPassport() {
               name: profile.displayName,
               email: profile.emails[0].value,
               googleId: profile.id,
-              // CHECKLIST: Initialize full user data in DB
+              // Initializing with empty arrays matching the schema
               xp: 0,
               level: 1,
               coins: 100,
-              completedModules: {} 
+              completedModules: [], 
+              completedChallenges: []
             });
           }
 

@@ -66,7 +66,6 @@ router.post("/login", async (req, res) => {
 
     // --- DYNAMIC STREAK & FREEZE CALCULATION ---
     const now = new Date();
-    // Normalize to Midnight UTC to avoid timezone/DST issues
     const todayDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
     
     const lastLogin = user.lastLoginDate ? new Date(user.lastLoginDate) : null;
@@ -80,18 +79,14 @@ router.post("/login", async (req, res) => {
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
       if (diffDays === 1) {
-        // Successive day
         user.streak += 1;
       } else if (diffDays > 1) {
-        // User missed a day - Check for Freeze
         if (user.streakFreezeActive) {
-          user.streakFreezeActive = false; // Item consumed
-          // Streak remains as it was
+          user.streakFreezeActive = false;
         } else {
-          user.streak = 1; // Reset to 1
+          user.streak = 1;
         }
       }
-      // if diffDays === 0, user already logged in today, keep current streak.
     }
 
     if (user.streak > (user.bestStreak || 0)) {
@@ -100,7 +95,6 @@ router.post("/login", async (req, res) => {
     
     user.lastLoginDate = now; 
     await user.save(); 
-    // ------------------------------------------
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
@@ -151,7 +145,6 @@ router.post("/buy-freeze", protect, async (req, res) => {
   }
 });
 
-// ADDED LEADERBOARD ROUTE
 router.get("/leaderboard", async (req, res) => {
   try {
     const topUsers = await User.find()
@@ -213,7 +206,6 @@ router.post("/update-progress", protect, async (req, res) => {
   }
 });
 
-// NEW: Challenge Completion Route (Checklist Requirement)
 router.post("/complete-challenge", protect, async (req, res) => {
   try {
     const { challengeId, xpAward, prerequisites } = req.body;
@@ -221,18 +213,15 @@ router.post("/complete-challenge", protect, async (req, res) => {
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // 1. Prerequisite Check
     if (prerequisites && prerequisites.length > 0) {
       const met = prerequisites.every(id => user.completedModules.includes(id));
       if (!met) return res.status(403).json({ message: "Prerequisites not met!" });
     }
 
-    // 2. Prevent Double Completion
     if (user.completedChallenges.includes(challengeId)) {
       return res.status(400).json({ message: "Challenge already completed" });
     }
 
-    // 3. Update State
     user.completedChallenges.push(challengeId);
     user.xp = (user.xp || 0) + xpAward;
     user.level = Math.floor(user.xp / 2000) + 1;
@@ -252,10 +241,13 @@ router.get("/google", passport.authenticate("google", { scope: ["profile", "emai
 
 router.get(
   "/google/callback",
-  passport.authenticate("google", { session: false, failureRedirect: "http://localhost:5173/login" }),
+  passport.authenticate("google", { failureRedirect: "http://localhost:5173/login" }),
   (req, res) => {
+    // Generate the JWT token here
     const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
-    res.redirect(`http://localhost:5173/dashboard?token=${token}`);
+    
+    // Redirect to frontend with token AND name/username to satisfy your Login.jsx useEffect
+    res.redirect(`http://localhost:5173/login?token=${token}&username=${req.user.name || req.user.email.split('@')[0]}`);
   }
 );
 

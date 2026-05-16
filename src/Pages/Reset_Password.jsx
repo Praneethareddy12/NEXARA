@@ -10,7 +10,8 @@ export default function ResetPassword() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleReset = async () => {
+  const handleReset = async (e) => {
+    if (e) e.preventDefault();
     if (!password || !confirmPassword) {
       alert("Please fill all fields");
       return;

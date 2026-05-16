@@ -10,16 +10,18 @@ export default function Login({ setIsLoggedIn }) {
 
   useEffect(() => {
     const token = searchParams.get("token");
-    const username = searchParams.get("username"); // for Google login if sent
+    const username = searchParams.get("username");
 
     if (token) {
       localStorage.setItem("token", token);
-
+      
       if (username) {
         localStorage.setItem("username", username);
       }
 
       if (setIsLoggedIn) setIsLoggedIn(true);
+      
+      // Navigate to dashboard ONLY if the token is valid
       navigate("/dashboard", { replace: true });
     }
   }, [searchParams, navigate, setIsLoggedIn]);

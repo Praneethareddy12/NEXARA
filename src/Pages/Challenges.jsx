@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CHALLENGE_MAP } from '../data/challengeData';
 import api from '../api/axios';
+import Navbar from '../Components/Navbar';
 import './Challenges.css';
 
 export default function Challenges() {
   const navigate = useNavigate();
   const [completed, setCompleted] = useState([]);
+  const [level, setLevel] = useState(1);
   const allIds = Object.keys(CHALLENGE_MAP);
 
   useEffect(() => {
@@ -14,6 +16,7 @@ export default function Challenges() {
       try {
         const res = await api.get("/api/auth/profile");
         setCompleted(res.data.completedModules || []);
+        setLevel(res.data.level || 1);
       } catch (err) { console.error("Failed to fetch progress"); }
     };
     fetchProgress();
@@ -27,6 +30,8 @@ export default function Challenges() {
   };
 
   return (
+    <div className="dashboard-wrapper">
+    <Navbar />
     <div className="arena-container">
       <h1>Challenge Arena ⚔️</h1>
       <p>Test your skills with real-world data science challenges</p>
@@ -44,6 +49,7 @@ export default function Challenges() {
                 <span>🕒 {CHALLENGE_MAP[id].time}</span>
               </div>
               <button 
+                type="button"
                 className="start-btn" 
                 style={{ backgroundColor: locked ? '#ccc' : (CHALLENGE_MAP[id].diff === "BOSS LEVEL" ? '#e91e63' : '#000') }}
                 disabled={locked}
@@ -55,6 +61,7 @@ export default function Challenges() {
           );
         })}
       </div>
+    </div>
     </div>
   );
 }

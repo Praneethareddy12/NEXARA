@@ -80,7 +80,7 @@ export default function Register() {
 
           <button type="submit" className="signin-btn-main">
             Create account
-          </button>
+          </button>   
         </form>
       </div>
     </div>

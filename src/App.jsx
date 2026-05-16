@@ -9,6 +9,9 @@ import Shop from "./Pages/Shop";
 import Leaderboard from "./Pages/Leaderboard";
 import Challenges from "./Pages/Challenges";
 import ChallengeDetail from "./Pages/ChallengeDetail"; // FIXED: Import added
+import Register from "./Pages/Register";
+import ForgotPassword from "./Pages/ForgotPassword";
+import ResetPassword from "./Pages/Reset_Password";
 
 // PrivateRoute Wrapper
 const PrivateRoute = ({ children }) => {
@@ -51,6 +54,21 @@ function App() {
           element={<PrivateRoute><Dashboard /></PrivateRoute>} 
         />
         <Route 
+        path="/register" 
+        element={<Register />} 
+        />
+
+        <Route 
+        path="/forgot-password" 
+        element={<ForgotPassword />} 
+        />
+
+        <Route 
+        path="/reset-password/:token" 
+        element={<ResetPassword />} 
+        />
+        
+        <Route 
           path="/paths" 
           element={<PrivateRoute><LearningPaths /></PrivateRoute>} 
         />
@@ -74,6 +92,7 @@ function App() {
           path="/profile" 
           element={<PrivateRoute><Dashboard /></PrivateRoute>} 
         />
+
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

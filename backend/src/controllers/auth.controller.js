@@ -13,10 +13,19 @@ export const register = async (req, res, next) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Initializing all game-related fields to prevent frontend undefined errors
     const user = await User.create({
       name,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      xp: 0,
+      level: 1,
+      coins: 100,
+      completedModules: [],
+      completedChallenges: [],
+      streak: 0,
+      lastLoginDate: new Date(),
+      streakFreezeActive: false
     });
 
     res.status(201).json({
@@ -24,7 +33,12 @@ export const register = async (req, res, next) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        xp: user.xp,
+        level: user.level,
+        coins: user.coins,
+        streak: user.streak,
+        streakFreezeActive: user.streakFreezeActive
       }
     });
   } catch (err) {
@@ -41,6 +55,11 @@ export const login = async (req, res, next) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
+    // Security check: If a user registered with Google, they may not have a local password
+    if (!user.password) {
+      return res.status(401).json({ message: "Please log in using Google" });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
@@ -51,7 +70,12 @@ export const login = async (req, res, next) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        xp: user.xp,
+        level: user.level,
+        streak: user.streak,
+        coins: user.coins,
+        streakFreezeActive: user.streakFreezeActive
       }
     });
   } catch (err) {

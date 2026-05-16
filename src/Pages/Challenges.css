@@ -1,12 +1,20 @@
-.arena-container { max-width: 1200px; margin: 0 auto; padding: 2rem; font-family: sans-serif; }
+.arena-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 100px 20px 2rem;
+}
+/*.arena-container { max-width: 1200px; margin: 0 auto; padding: 2rem; font-family: sans-serif; }*/
 .search-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; }
 .tabs { display: flex; gap: 15px; margin-bottom: 30px; }
 .tab { padding: 8px 30px; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; }
 .tab.active { background: #fff; border-bottom: 3px solid #000; }
 
 /* Grid Layout */
-.card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 50px; }
-
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 25px;
+}
 /* Card Styling */
 .challenge-card { border: 1px solid #e0e0e0; border-radius: 12px; padding: 20px; background: #fff; display: flex; flex-direction: column; }
 .boss-card { border: 2px solid #e91e63; border-radius: 12px; padding: 20px; background: #fff; }
