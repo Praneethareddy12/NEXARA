@@ -7,6 +7,7 @@ import session from "express-session"; // Required for session persistence
 import initPassport from "./config/passport.js";
 import authRoutes from "./routes/auth.routes.js";
 import progressRoutes from "./routes/progressRoutes.js";
+import shopRoutes from "./routes/shop.js";
 dotenv.config();
 
 const app = express();
@@ -63,6 +64,7 @@ app.use('/api/progress', progressRoutes);
 
 // Authentication & User Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/shop", shopRoutes);
 
 app.get("/", (req, res) => {
   res.send("🚀 SkillUp Nexus Backend Running");

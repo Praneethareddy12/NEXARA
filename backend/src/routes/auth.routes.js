@@ -33,7 +33,7 @@ router.post("/register", async (req, res) => {
       completedModules: [],
       streak: 0,
       lastLoginDate: new Date(),
-      streakFreezeActive: false 
+      streakFreezeActive: false
     });
 
     res.status(201).json({ message: "Account created successfully!" });
@@ -67,14 +67,14 @@ router.post("/login", async (req, res) => {
     // --- DYNAMIC STREAK & FREEZE CALCULATION ---
     const now = new Date();
     const todayDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-    
+   
     const lastLogin = user.lastLoginDate ? new Date(user.lastLoginDate) : null;
-    
+   
     if (!lastLogin) {
       user.streak = 1;
     } else {
       const lastDate = new Date(Date.UTC(lastLogin.getUTCFullYear(), lastLogin.getUTCMonth(), lastLogin.getUTCDate()));
-      
+     
       const diffTime = todayDate - lastDate;
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
@@ -92,17 +92,17 @@ router.post("/login", async (req, res) => {
     if (user.streak > (user.bestStreak || 0)) {
       user.bestStreak = user.streak;
     }
-    
-    user.lastLoginDate = now; 
-    await user.save(); 
+   
+    user.lastLoginDate = now;
+    await user.save();
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
     res.json({
       token,
-      user: { 
-        id: user._id, 
-        email: user.email, 
+      user: {
+        id: user._id,
+        email: user.email,
         xp: user.xp,
         level: user.level,
         streak: user.streak,
@@ -136,9 +136,9 @@ router.post("/buy-freeze", protect, async (req, res) => {
     user.streakFreezeActive = true;
     await user.save();
 
-    res.json({ 
-      message: "Streak Freeze Activated! Your streak is protected.", 
-      coins: user.coins 
+    res.json({
+      message: "Streak Freeze Activated!",
+      user
     });
   } catch (error) {
     res.status(500).json({ message: "Error processing purchase" });
@@ -184,7 +184,7 @@ router.post("/update-progress", protect, async (req, res) => {
 
     const oldLevel = user.level || 1;
     const newLevel = Math.floor(user.xp / 2000) + 1;
-    
+   
     if (newLevel > oldLevel) {
       user.level = newLevel;
     }
@@ -195,14 +195,31 @@ router.post("/update-progress", protect, async (req, res) => {
     }
 
     await user.save();
-    res.json({ 
-      message: "Progress saved", 
-      xp: user.xp, 
-      level: user.level 
+    res.json({
+      message: "Progress saved",
+      user
     });
   } catch (error) {
     console.error("Update Error:", error);
     res.status(500).json({ message: "Error saving progress" });
+  }
+});
+
+router.put("/update-profile", protect, async (req, res) => {
+  try {
+    const { name, avatar } = req.body;
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.name = name || user.name;
+    user.avatar = avatar || user.avatar;
+
+    await user.save();
+
+    res.json({ message: "Profile updated", user });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating profile" });
   }
 });
 
@@ -227,7 +244,10 @@ router.post("/complete-challenge", protect, async (req, res) => {
     user.level = Math.floor(user.xp / 2000) + 1;
     await user.save();
 
-    res.json({ message: "Challenge completed!", xp: user.xp, level: user.level });
+    res.json({
+      message: "Challenge completed!",
+      user
+    });
   } catch (error) {
     console.error("Challenge Completion Error:", error);
     res.status(500).json({ message: "Error completing challenge" });
@@ -245,7 +265,7 @@ router.get(
   (req, res) => {
     // Generate the JWT token here
     const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
-    
+   
     // Redirect to frontend with token AND name/username to satisfy your Login.jsx useEffect
     res.redirect(`http://localhost:5173/login?token=${token}&username=${req.user.name || req.user.email.split('@')[0]}`);
   }

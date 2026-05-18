@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+//import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./Pages/Login";
 import Dashboard from "./Pages/Dashboard";
 import Home from "./Pages/Home";
@@ -12,6 +13,8 @@ import ChallengeDetail from "./Pages/ChallengeDetail"; // FIXED: Import added
 import Register from "./Pages/Register";
 import ForgotPassword from "./Pages/ForgotPassword";
 import ResetPassword from "./Pages/Reset_Password";
+import Profile from "./Pages/Profile";
+import { UserProvider } from "./context/UserContext";
 
 // PrivateRoute Wrapper
 const PrivateRoute = ({ children }) => {
@@ -29,7 +32,7 @@ function App() {
   }, []);
 
   return (
-
+      <UserProvider>
       <Routes>
         <Route 
           path="/" 
@@ -88,14 +91,15 @@ function App() {
           path="/challenges" 
           element={<PrivateRoute><Challenges /></PrivateRoute>} 
         />
-        <Route 
-          path="/profile" 
-          element={<PrivateRoute><Dashboard /></PrivateRoute>} 
+        <Route
+          path="/profile"
+          element={<PrivateRoute><Profile /></PrivateRoute>}
         />
 
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+      </UserProvider>
   );
 }
 

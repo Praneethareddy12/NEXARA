@@ -5,176 +5,250 @@ import { CHALLENGE_MAP } from "../data/challengeData";
 import Navbar from "../Components/Navbar";
 import "./Dashboard.css";
 
+import { Radar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip,
+  Legend
+} from "chart.js";
+
+ChartJS.register(
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip,
+  Legend
+);
+
 export default function Dashboard() {
   const navigate = useNavigate();
-  
+
   const [user, setUser] = useState({
     username: "User",
     xp: 0,
     level: 1,
-    coins: 100,
+    coins: 0,
     pathsCount: 0,
     streak: 0,
     bestStreak: 0,
-    streakFreezeActive: false,
     completedModules: [],
     completedChallenges: []
   });
 
-  const hotChallengeIds = ['c1', 'c2', 'c3'];
-  
-  // Calculate progress stats
-  const totalChallenges = Object.keys(CHALLENGE_MAP).length;
-  const completedCount = user.completedChallenges.length;
-  const progressPercentage = Math.round((user.completedModules.length / 50) * 100);
+  const hotChallengeIds = ["c1", "c2", "c3"];
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const res = await api.get("/api/auth/profile");
+
         const rawProgress = res.data.completedModules || [];
-        const uniquePathIds = new Set(rawProgress.map((item) => item.split("-")[0]));
+        const uniquePathIds = new Set(
+          rawProgress.map((item) => item.split("-")[0])
+        );
 
         setUser({
-          username: res.data.email.split('@')[0],
+          username: res.data.name || res.data.email.split("@")[0],
           xp: res.data.xp || 0,
           level: res.data.level || 1,
           coins: res.data.coins || 0,
           pathsCount: uniquePathIds.size,
           streak: res.data.streak || 0,
           bestStreak: res.data.bestStreak || 0,
-          streakFreezeActive: res.data.streakFreezeActive || false,
           completedModules: rawProgress,
           completedChallenges: res.data.completedChallenges || []
         });
-      } catch (err) {
-        console.error("Failed to fetch profile");
+      } catch {
+        console.log("error fetching user");
       }
     };
+
     fetchUserData();
   }, []);
 
-  const { xp, level, username, coins, pathsCount, streak, bestStreak, streakFreezeActive } = user;
+  const {
+    xp,
+    level,
+    username,
+    coins,
+    pathsCount,
+    streak,
+    bestStreak,
+    completedChallenges,
+    completedModules
+  } = user;
 
+  // PROGRESS
+  const progressPercentage = Math.min(
+    100,
+    Math.round((completedModules.length / 50) * 100)
+  );
+
+  // SKILLS
   const skills = {
-    python: Math.min(90, 20 + (xp / 100)),
-    sql: Math.min(85, 10 + (xp / 150)),
-    stats: Math.min(80, 5 + (xp / 200)),
-    ml: Math.min(75, 2 + (xp / 300)),
-    dataViz: Math.min(88, 15 + (xp / 120))
+    Python: Math.min(100, completedModules.length * 5),
+    SQL: Math.min(100, completedChallenges.length * 10),
+    Stats: Math.min(100, xp / 50),
+    ML: Math.min(100, level * 15),
+    DataViz: Math.min(
+      100,
+      (completedModules.length + completedChallenges.length) * 3
+    )
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/login");
+  // RADAR
+  const radarData = {
+    labels: Object.keys(skills),
+    datasets: [
+      {
+        data: Object.values(skills),
+        backgroundColor: "rgba(124,58,237,0.4)",
+        borderColor: "#7c3aed",
+        borderWidth: 2
+      }
+    ]
   };
+
+  const radarOptions = {
+    scales: {
+      r: {
+        min: 0,
+        max: 100,
+        ticks: { stepSize: 20, color: "#aaa" },
+        angleLines: { color: "#444" },
+        grid: { color: "#444" },
+        pointLabels: { color: "white" }
+      }
+    },
+    plugins: { legend: { display: false } }
+  };
+
+  // ✅ FIXED STREAK CALENDAR
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const activeDates = new Set();
+  for (let i = 0; i < streak; i++) {
+    const d = new Date();
+    d.setDate(today.getDate() - i);
+    if (d.getMonth() === month) {
+      activeDates.add(d.getDate());
+    }
+  }
+
+  const calendarDays = Array.from({ length: daysInMonth }, (_, i) => {
+    const dayNumber = i + 1;
+    return {
+      day: dayNumber,
+      active: activeDates.has(dayNumber)
+    };
+  });
 
   return (
     <div className="dashboard-container">
       <Navbar level={level} />
 
       <main className="dashboard-main">
-        <h1 className="welcome-text">Welcome back, {username}! 👋</h1>
-        
-        <div className="progress-card" style={{ marginBottom: '20px', padding: '15px', background: 'white', borderRadius: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span>Course Progress</span>
-              <span>{progressPercentage}%</span>
+        <h1 className="welcome-text">
+          Welcome back, {username}! 👋
+        </h1>
+
+        {/* PROGRESS */}
+        <div className="progress-card">
+          <div className="progress-header">
+            <span>Course Progress</span>
+            <span>{progressPercentage}%</span>
           </div>
-          <div style={{ height: '8px', background: '#e5e7eb', borderRadius: '4px', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${progressPercentage}%`, background: '#7c3aed' }}></div>
+          <div className="progress-bar">
+            <div style={{ width: `${progressPercentage}%` }}></div>
           </div>
-          {completedCount >= totalChallenges && <p style={{ color: '#7c3aed', fontWeight: 'bold', marginTop: '10px' }}>🎉 Course Completed!</p>}
         </div>
 
+        {/* TOP */}
         <div className="dashboard-top-grid">
-          <div className="stat-card level-circle-card">
-            <div className="circle-progress" style={{ background: `conic-gradient(#7c3aed ${(xp % 2000) / 20}%, #e5e7eb 0%)` }}>
-              <div className="circle-inner">
-                <span className="lvl-label">LEVEL</span>
-                <span className="lvl-num">{level}</span>
-                <span className="xp-sub">{xp} / {level * 2000} XP</span>
-              </div>
-            </div>
+          <div className="stat-card">
+            <h3>Level</h3>
+            <h1>{level}</h1>
+            <p>{xp} XP</p>
           </div>
 
           <div className="stat-card streak-card">
-            <div className="streak-content">
-              <div className="streak-header">🔥 Streak {streakFreezeActive && <span title="Streak Freeze Active">❄️</span>}</div>
-              <div className="streak-val">{streak} <span>days</span></div>
-              <p className="streak-best">Best: {bestStreak} days</p>
-            </div>
+            <h3>🔥 Streak</h3>
+            <h1>{streak} days</h1>
+            <p>Best: {bestStreak}</p>
           </div>
 
-          <div className="stat-card assessment-card">
+          <div className="stat-card">
             <h3>Skill Assessment</h3>
-            <div className="spider-chart-container">
-              <div className="radar-background"></div>
-              <div className="radar-value-area" style={{ clipPath: `polygon(50% ${100 - skills.python}%, ${50 + (skills.stats * 0.5)}% ${50 - (skills.stats * 0.2)}%, ${50 + (skills.ml * 0.3)}% ${50 + (skills.ml * 0.4)}%, ${50 + (skills.sql * -0.3)}% ${50 + (skills.sql * 0.4)}%, ${50 + (skills.dataViz * -0.5)}% ${50 - (skills.dataViz * 0.2)}%)` }}></div>
-            </div>
-          </div>
-        </div>
-
-        <div className="dashboard-mid-grid">
-          <div className="mini-card"><span className="mini-label">Challenges</span><span className="mini-val" style={{ color: "#6366f1" }}>{completedCount}</span></div>
-          <div className="mini-card"><span className="mini-label">Total XP</span><span className="mini-val" style={{ color: "#ec4899" }}>{xp}</span></div>
-          <div className="mini-card"><span className="mini-label">Coins</span><span className="mini-val" style={{ color: "#f59e0b" }}>{coins}</span></div>
-          <div className="mini-card"><span className="mini-label">Paths</span><span className="mini-val" style={{ color: "#10b981" }}>{pathsCount}</span></div>
-        </div>
-
-        <div className="dashboard-bottom-grid">
-          <div className="challenges-list-card">
-            <div className="card-header-flex">
-              <h3>🔥 Hot Challenges</h3>
-              <button className="view-all-text" onClick={() => navigate("/challenges")}>View All</button>
-            </div>
-            
-            {hotChallengeIds.map((id) => (
-              <div 
-                key={id} 
-                className="challenge-row-item" 
-                onClick={() => navigate(`/challenge/${id}`)}
-                style={{ cursor: "pointer" }}
-              >
-                <div className="challenge-main-info">
-                  <p className="c-name">{CHALLENGE_MAP[id].title}</p>
-                  <span className="c-tag">{CHALLENGE_MAP[id].diff.toLowerCase()}</span>
-                </div>
-                <div className="c-meta-container">
-                  <span className="c-xp">{CHALLENGE_MAP[id].xp} XP</span>
-                  <span className="c-difficulty">{CHALLENGE_MAP[id].diff.toLowerCase()}</span>
+            {Object.entries(skills).map(([key, value]) => (
+              <div key={key} className="skill-bar">
+                <span>{key}</span>
+                <div className="bar">
+                  <div style={{ width: `${value}%` }}></div>
                 </div>
               </div>
             ))}
-
-            {/* --- NEW SECTION: Show Completed Challenges --- */}
-            <div className="completed-challenges-container" style={{ marginTop: '20px', borderTop: '1px solid #e5e7eb', paddingTop: '15px' }}>
-              <h3>✅ Completed</h3>
-              {user.completedChallenges.length > 0 ? (
-                user.completedChallenges.map((cId) => (
-                  <div key={cId} style={{ fontSize: '0.9rem', color: '#4b5563', padding: '4px 0' }}>
-                    • {CHALLENGE_MAP[cId] ? CHALLENGE_MAP[cId].title : "Hidden Challenge"}
-                  </div>
-                ))
-              ) : (
-                <p style={{ fontSize: '0.85rem', color: '#9ca3af' }}>No challenges completed yet.</p>
-              )}
-            </div>
-          </div>
-
-          <div className="quick-actions-card">
-            <h3>Quick Actions</h3>
-            <button className="qa-btn blue" onClick={() => navigate("/paths")}>📖 Browse Learning Paths</button>
-            <button className="qa-btn pink" onClick={() => navigate("/shop")}>🛒 Visit Shop</button>
-            <button className="qa-btn red" onClick={() => navigate("/leaderboard")}>📈 View Leaderboard</button>
           </div>
         </div>
-      </main>
 
-      <footer className="centered-footer">
-        <div className="footer-logo-main">✨ Nexara © 2026</div>
-        <p className="footer-tagline">Master data science through gamified learning 🚀</p>
-      </footer>
+        {/* SECOND ROW */}
+        <div className="dashboard-second-row">
+          <div className="stat-card">
+            <h3>Skill Radar</h3>
+            <Radar data={radarData} options={radarOptions} />
+          </div>
+
+          <div className="stat-card calendar-card">
+            <h3>
+              📅 {today.toLocaleString("default", { month: "long" })} {year}
+            </h3>
+
+            <div className="calendar">
+              {calendarDays.map((day, i) => (
+                <div key={i} className="calendar-item">
+                  <div className={`day ${day.active ? "active" : ""}`} />
+                  <span>{day.day}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* MID */}
+        <div className="dashboard-mid-grid">
+          <div className="mini-card">🏆 {completedChallenges.length}</div>
+          <div className="mini-card">⚡ {xp}</div>
+          <div className="mini-card">🪙 {coins}</div>
+          <div className="mini-card">📚 {pathsCount}</div>
+        </div>
+
+        {/* CHALLENGES */}
+        <div className="card">
+          <h3>🔥 Hot Challenges</h3>
+
+          {hotChallengeIds.map((id) => (
+            <div
+              key={id}
+              className="challenge-row"
+              onClick={() => navigate(`/challenge/${id}`)}
+            >
+              <div>
+                <p>{CHALLENGE_MAP[id].title}</p>
+                <span>{CHALLENGE_MAP[id].diff}</span>
+              </div>
+              <b>{CHALLENGE_MAP[id].xp} XP</b>
+            </div>
+          ))}
+        </div>
+      </main>
     </div>
   );
 }
