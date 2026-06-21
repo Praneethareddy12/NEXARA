@@ -20,6 +20,7 @@ export default function Navbar() {
     fetchUser();
   }, []);
 
+
   const handleLogout = () => {
     localStorage.clear();
     navigate("/login");
@@ -37,6 +38,7 @@ export default function Navbar() {
           <Link to="/home" className={isActive("/home")}>🏠 Home</Link>
           <Link to="/dashboard" className={isActive("/dashboard")}>📊 Dashboard</Link>
           <Link to="/paths" className={isActive("/paths")}>📖 Learning Paths</Link>
+          <Link to="/adaptive" className={isActive("/adaptive")}>🧭 Adaptive</Link>
           <Link to="/challenges" className={isActive("/challenges")}>🎯 Challenges</Link>
           <Link to="/leaderboard" className={isActive("/leaderboard")}>🏆 Leaderboard</Link>
           <Link to="/shop" className={isActive("/shop")}>🛒 Shop</Link>

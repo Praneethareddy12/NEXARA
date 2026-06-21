@@ -19,18 +19,29 @@ export default function LearningPaths() {
   const [level, setLevel] = useState("All Levels");
   const [search, setSearch] = useState("");
   const [userStats, setUserStats] = useState({ level: 1 });
+  const [recommendedPaths, setRecommendedPaths] = useState([]);
+  const [learningPathInsights, setLearningPathInsights] = useState([]);
+  const [unlockedPaths, setUnlockedPaths] = useState([]);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const res = await api.get("/api/auth/profile");
         setUserStats({ level: res.data.level || 1 });
+        setRecommendedPaths(res.data.recommendedPaths || []);
+        setLearningPathInsights(res.data.learningPathInsights || []);
+        setUnlockedPaths(res.data.unlockedPaths || []);
       } catch (err) {
         console.error("Error fetching user stats:", err);
       }
     };
     fetchUserData();
   }, []);
+
+  const getCompletedCount = (pathId) => {
+    const completedModules = learningPathInsights.find((path) => path.id === pathId)?.completedModules || 0;
+    return completedModules;
+  };
 
   const filteredPaths = pathsData.filter(path => {
     const matchCat = category === "All Categories" || path.category === category;
@@ -53,6 +64,20 @@ export default function LearningPaths() {
           <h1 className="paths-title">Learning Paths 🎓</h1>
           <p className="paths-subtitle">Master data science from beginner to expert</p>
         </header>
+
+        {recommendedPaths.length > 0 && (
+          <section className="paths-recommendation-bar">
+            <h2>Recommended for your adaptive learning journey</h2>
+            <div className="recommendation-list">
+              {recommendedPaths.map((path) => (
+                <div key={path.id} className="recommendation-pill">
+                  <strong>{path.title}</strong>
+                  <span>{path.status === "Completed" ? "Completed" : `${path.progress}% complete`}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         <div className="paths-filter-bar">
           <div className="search-container">
@@ -78,23 +103,46 @@ export default function LearningPaths() {
         </div>
 
         <div className="paths-grid-layout">
-          {filteredPaths.map((path) => (
-            <div key={path.id} className="path-card-item">
-              <div className="path-card-top">
-                <div className="path-icon-bg" style={{ backgroundColor: path.color + '22' }}>
-                  <span className="path-emoji">{path.icon}</span>
+          {filteredPaths.map((path) => {
+            const insight = learningPathInsights.find((item) => item.id === path.id) || {};
+            const completedCount = insight.completedModules || 0;
+            const progressPercent = insight.progress || 0;
+            const isRecommended = recommendedPaths.some((recommended) => recommended.id === path.id);
+            const isUnlocked = insight.unlocked !== undefined ? insight.unlocked : unlockedPaths.includes(path.id);
+
+            return (
+              <div key={path.id} className={`path-card-item ${isRecommended ? "recommended" : ""} ${!isUnlocked ? "locked" : ""}`}>
+                <div className="path-card-top">
+                  <div className="path-icon-bg" style={{ backgroundColor: path.color + '22' }}>
+                    <span className="path-emoji">{path.icon}</span>
+                  </div>
+                  <div>
+                    <h4 className="path-name">{path.title}</h4>
+                    <p className="path-mini-desc">Master the basics of {path.title.split(" ")[0]}...</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="path-name">{path.title}</h4>
-                  <p className="path-mini-desc">Master the basics of {path.title.split(" ")[0]}...</p>
+                <div className="path-progress-row">
+                  <span>{progressPercent}% complete</span>
+                  <span>{completedCount}/{path.modules} modules</span>
                 </div>
+                <div className="path-progress-bar">
+                  <div style={{ width: `${progressPercent}%` }} />
+                </div>
+                <div className="path-card-bottom">
+                  <span className="module-count">📖 {path.modules} modules</span>
+                  <button
+                    className="start-learning-btn"
+                    disabled={!isUnlocked}
+                    onClick={() => isUnlocked && navigate(`/learn/${path.id}`)}
+                  >
+                    {isUnlocked ? "Start Learning" : "Locked"}
+                  </button>
+                </div>
+                {!isUnlocked && <div className="locked-pill">Unlock prerequisites</div>}
+                {isRecommended && isUnlocked && <div className="recommended-pill">Recommended</div>}
               </div>
-              <div className="path-card-bottom">
-                <span className="module-count">📖 {path.modules} modules</span>
-                <button className="start-learning-btn" onClick={() => navigate(`/learn/${path.id}`)}>Start Learning</button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </main>
     </div>

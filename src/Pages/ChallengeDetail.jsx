@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CHALLENGE_MAP } from '../data/challengeData';
 import api from '../api/axios'; // Import your configured axios instance
@@ -9,18 +9,38 @@ export default function ChallengeDetail() {
   const navigate = useNavigate();
   const challenge = CHALLENGE_MAP[id];
   const [submitting, setSubmitting] = useState(false);
+  const [isDailyProblem, setIsDailyProblem] = useState(false);
+
+  useEffect(() => {
+    const checkDaily = async () => {
+      try {
+        const res = await api.get('/api/auth/daily-problem');
+        setIsDailyProblem(res.data.problem.id === id);
+      } catch (err) {
+        console.error('Daily problem check failed', err);
+      }
+    };
+
+    checkDaily();
+  }, [id]);
 
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      await api.post('/api/progress/complete', { 
-        challengeId: id, 
-        xpEarned: challenge.xp 
-      });
-      alert("Challenge Completed! XP Awarded.");
-      navigate('/challenges');
+      if (isDailyProblem) {
+        await api.post('/api/auth/solve-daily-problem');
+        alert('Daily Challenge solved! Streak updated.');
+        navigate('/dashboard');
+      } else {
+        await api.post('/api/progress/complete', {
+          challengeId: id,
+          xpEarned: challenge.xp
+        });
+        alert('Challenge Completed! XP Awarded.');
+        navigate('/challenges');
+      }
     } catch (err) {
-      alert(err.response?.data?.message || "Error saving progress");
+      alert(err.response?.data?.message || 'Error saving progress');
     } finally {
       setSubmitting(false);
     }

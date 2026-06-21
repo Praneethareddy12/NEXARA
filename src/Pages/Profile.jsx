@@ -12,17 +12,17 @@ export default function Profile() {
   const avatars = ["🐱", "🐶", "🦊", "🐼", "🐸", "🐵", "🦄", "🐯"];
 
   useEffect(() => {
-    if (!user) fetchUser();
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      setFormData({
-        name: user.name || "",
-        avatar: user.avatar || "",
-      });
+    if (!user) {
+      fetchUser();
+      return;
     }
-  }, [user]);
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setFormData({
+      name: user.name || "",
+      avatar: user.avatar || "",
+    });
+  }, [user, fetchUser]);
 
   const handleUpdate = async () => {
     try {
@@ -171,6 +171,33 @@ export default function Profile() {
               No achievements yet 🚀
             </p>
           )}
+        </div>
+
+        <div className="adaptive-profile-section">
+          <h3>Adaptive Insights</h3>
+          <p><strong>Daily problem completion:</strong> {user.dailyProblemCompletionRate || 0}%</p>
+          <p><strong>Challenge attempts:</strong> {user.challengeStats?.attempts || user.challengeAttempts || 0}</p>
+          <p><strong>Challenge failures:</strong> {user.challengeStats?.failures || user.challengeFailures || 0}</p>
+          <p><strong>Average challenge score:</strong> {user.challengeStats?.averageScore || user.averageScore || 0}</p>
+          <p><strong>Unlocked paths:</strong> {(user.unlockedPaths || []).join(", ") || "None"}</p>
+          <div className="strengths-weaknesses">
+            <div>
+              <h4>Strengths</h4>
+              <ul>
+                {user.skillProfile?.strengths?.map((item) => (
+                  <li key={item.skill}>{item.skill}: {item.score}</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4>Weaknesses</h4>
+              <ul>
+                {user.skillProfile?.weaknesses?.map((item) => (
+                  <li key={item.skill}>{item.skill}: {item.score}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
 
         {/* ACTIVITY */}

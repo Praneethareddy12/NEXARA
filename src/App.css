@@ -184,7 +184,7 @@
 }
 
 /* Standardized Navbar Styles (shared) */
-.navbar { display: flex; justify-content: space-between; padding: 1rem 5%; align-items: center; background: #ffffff; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 100; }
+.navbar { display: flex; justify-content: space-between; padding: 1rem 5%; align-items: center; background: #1e1e2f; border-bottom: 1px solid #2a2a40; position: sticky; top: 0; z-index: 100; }
 .nav-left { display: flex; align-items: center; gap: 2rem; }
 .nav-logo { font-size: 1.5rem; font-weight: 800; color: #7c3aed; }
 .nav-menu { display: flex; gap: 1.5rem; }
@@ -228,6 +228,9 @@
   padding: 30px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.02);
 }
+
+/* Theme toggle button */
+/* (theme toggle and light-theme overrides removed) */
 
 .streak-card {
   background: linear-gradient(135deg, #ff7e5f, #feb47b);

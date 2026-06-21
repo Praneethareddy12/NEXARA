@@ -14,6 +14,7 @@ import Register from "./Pages/Register";
 import ForgotPassword from "./Pages/ForgotPassword";
 import ResetPassword from "./Pages/Reset_Password";
 import Profile from "./Pages/Profile";
+import AdaptivePath from "./Pages/AdaptivePath";
 import { UserProvider } from "./context/UserContext";
 
 // PrivateRoute Wrapper
@@ -74,6 +75,10 @@ function App() {
         <Route 
           path="/paths" 
           element={<PrivateRoute><LearningPaths /></PrivateRoute>} 
+        />
+        <Route 
+          path="/adaptive" 
+          element={<PrivateRoute><AdaptivePath /></PrivateRoute>} 
         />
         <Route 
           path="/learn/:id" 

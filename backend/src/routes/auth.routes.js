@@ -4,8 +4,23 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import passport from "passport";
 import User from "../models/User.js";
+import DailyProblem from "../models/DailyProblem.js";
 import { sendResetEmail } from "../utils/sendEmail.js";
 import { protect } from "../middlewares/auth.middleware.js";
+import { getTodayDate, generateDailyProblems, calculateStreak } from "../utils/dailyProblems.js";
+import {
+  getDefaultSkills,
+  syncSkillProfile,
+  getLearningPathSummaries,
+  recommendLearningPaths,
+  recommendChallenge,
+  updateSkillsFromModule,
+  updateSkillsFromChallenge,
+  ensureUnlockedPaths,
+  getDailyProblemCompletionRate,
+  getChallengeStats,
+  getAdaptivePayload
+} from "../utils/adaptiveLearning.js";
 
 const router = express.Router();
 
@@ -31,8 +46,17 @@ router.post("/register", async (req, res) => {
       level: 1,
       coins: 100,
       completedModules: [],
+      completedChallenges: [],
+      completedPaths: [],
+      unlockedPaths: ["1", "2"],
+      challengeAttempts: 0,
+      challengeFailures: 0,
+      challengeScores: [],
+      averageScore: 0,
+      skills: getDefaultSkills(),
       streak: 0,
-      lastLoginDate: new Date(),
+      bestStreak: 0,
+      problemsSolvedDates: [],
       streakFreezeActive: false
     });
 
@@ -44,7 +68,7 @@ router.post("/register", async (req, res) => {
 });
 
 /* ==========================================
-   2. LOGIN (Sign In) - REFINED STREAK LOGIC
+   2. LOGIN (Sign In) - SIMPLE AUTH
    ========================================== */
 router.post("/login", async (req, res) => {
   try {
@@ -64,38 +88,7 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    // --- DYNAMIC STREAK & FREEZE CALCULATION ---
-    const now = new Date();
-    const todayDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-   
-    const lastLogin = user.lastLoginDate ? new Date(user.lastLoginDate) : null;
-   
-    if (!lastLogin) {
-      user.streak = 1;
-    } else {
-      const lastDate = new Date(Date.UTC(lastLogin.getUTCFullYear(), lastLogin.getUTCMonth(), lastLogin.getUTCDate()));
-     
-      const diffTime = todayDate - lastDate;
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-      if (diffDays === 1) {
-        user.streak += 1;
-      } else if (diffDays > 1) {
-        if (user.streakFreezeActive) {
-          user.streakFreezeActive = false;
-        } else {
-          user.streak = 1;
-        }
-      }
-    }
-
-    if (user.streak > (user.bestStreak || 0)) {
-      user.bestStreak = user.streak;
-    }
-   
-    user.lastLoginDate = now;
-    await user.save();
-
+    // Just authenticate - streak is now based on solving daily problems, not login
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
     res.json({
@@ -107,7 +100,8 @@ router.post("/login", async (req, res) => {
         level: user.level,
         streak: user.streak,
         coins: user.coins,
-        streakFreezeActive: user.streakFreezeActive
+        streakFreezeActive: user.streakFreezeActive,
+        skills: user.skills || getDefaultSkills()
       },
     });
   } catch (error) {
@@ -117,33 +111,8 @@ router.post("/login", async (req, res) => {
 });
 
 /* ==========================================
-   3. SHOP & LEADERBOARD
+   3. LEADERBOARD
    ========================================== */
-
-router.post("/buy-freeze", protect, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    if (user.coins < 50) {
-      return res.status(400).json({ message: "Not enough coins! You need 50." });
-    }
-    if (user.streakFreezeActive) {
-      return res.status(400).json({ message: "You already have an active freeze!" });
-    }
-
-    user.coins -= 50;
-    user.streakFreezeActive = true;
-    await user.save();
-
-    res.json({
-      message: "Streak Freeze Activated!",
-      user
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Error processing purchase" });
-  }
-});
 
 router.get("/leaderboard", async (req, res) => {
   try {
@@ -159,15 +128,177 @@ router.get("/leaderboard", async (req, res) => {
 });
 
 /* ==========================================
+   3.5 DAILY PROBLEM SYSTEM 🔥
+   ========================================== */
+
+// GET TODAY'S DAILY PROBLEM (same for all users)
+router.get("/daily-problem", async (req, res) => {
+  try {
+    const todayDate = getTodayDate();
+    
+    let dailyProblem = await DailyProblem.findOne({ date: todayDate });
+    if (!dailyProblem) {
+      const problem = generateDailyProblems(todayDate);
+      dailyProblem = await DailyProblem.create({
+        date: todayDate,
+        problem
+      });
+    }
+
+    res.json(dailyProblem);
+  } catch (error) {
+    console.error("Daily Problem Error:", error);
+    res.status(500).json({ message: "Error fetching daily problems" });
+  }
+});
+
+// SOLVE DAILY PROBLEM (and update streak)
+router.post("/solve-daily-problem", protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const todayDate = getTodayDate();
+    const todayUTC = new Date(todayDate + "T00:00:00Z");
+
+    // Ensure today's problem exists
+    let dailyProblem = await DailyProblem.findOne({ date: todayDate });
+    if (!dailyProblem) {
+      const problem = generateDailyProblems(todayDate);
+      dailyProblem = await DailyProblem.create({ date: todayDate, problem });
+    }
+
+    const alreadySolvedToday = user.problemsSolvedDates?.some(date => {
+      const d = new Date(date);
+      return d.toISOString().split('T')[0] === todayDate;
+    });
+
+    if (alreadySolvedToday) {
+      return res.status(400).json({ message: "You already solved today's problem!" });
+    }
+
+    const lastSolved = user.lastProblemSolvedDate ? new Date(user.lastProblemSolvedDate) : null;
+    let newStreak = 1;
+
+    if (lastSolved) {
+      const lastUTC = new Date(Date.UTC(lastSolved.getUTCFullYear(), lastSolved.getUTCMonth(), lastSolved.getUTCDate()));
+      const diffDays = Math.floor((todayUTC - lastUTC) / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 1) {
+        newStreak = (user.streak || 0) + 1;
+      } else if (diffDays === 2 && user.streakFreezeActive) {
+        user.streakFreezeActive = false;
+        newStreak = user.streak || 1;
+      } else {
+        newStreak = 1;
+      }
+    }
+
+    user.problemsSolvedDates.push(todayUTC);
+    user.lastProblemSolvedDate = todayUTC;
+    user.streak = newStreak;
+
+    if (user.streak > (user.bestStreak || 0)) {
+      user.bestStreak = user.streak;
+    }
+
+    // Award XP and coins
+    user.xp = (user.xp || 0) + dailyProblem.problem.xpReward;
+    user.coins = (user.coins || 0) + dailyProblem.problem.coinsReward;
+    user.level = Math.floor(user.xp / 2000) + 1;
+
+    await user.save();
+
+    res.json({
+      message: "Daily problem solved! 🎉",
+      user: {
+        xp: user.xp,
+        level: user.level,
+        coins: user.coins,
+        streak: user.streak,
+        bestStreak: user.bestStreak
+      }
+    });
+  } catch (error) {
+    console.error("Solve Problem Error:", error);
+    res.status(500).json({ message: "Error solving daily problem" });
+  }
+});
+
+// GET USER'S STREAK CALENDAR (for streak history)
+router.get("/streak-calendar", protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const calendar = user.problemsSolvedDates?.map(date => {
+      return new Date(date).toISOString().split('T')[0];
+    }) || [];
+
+    res.json({
+      streak: user.streak,
+      bestStreak: user.bestStreak,
+      problemsSolvedDates: calendar,
+      lastProblemSolvedDate: user.lastProblemSolvedDate
+    });
+  } catch (error) {
+    console.error("Streak Calendar Error:", error);
+    res.status(500).json({ message: "Error fetching streak calendar" });
+  }
+});
+
+/* ==========================================
    4. PROGRESS & PROFILE
    ========================================== */
 
 router.get("/profile", protect, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
-    res.json(user);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const calendar = user.problemsSolvedDates?.map(date => {
+      return new Date(date).toISOString().split('T')[0];
+    }) || [];
+
+    const skillProfile = syncSkillProfile(user);
+    ensureUnlockedPaths(user);
+    const recommendedPaths = recommendLearningPaths(user);
+    const recommendedChallenge = recommendChallenge(user);
+    const learningPathInsights = getLearningPathSummaries(user);
+    const dailyProblemCompletionRate = getDailyProblemCompletionRate(user);
+    const challengeStats = getChallengeStats(user);
+
+    await user.save();
+
+    res.json({
+      ...user.toObject(),
+      problemsSolvedDatesFormatted: calendar,
+      skillProfile,
+      recommendedPaths,
+      recommendedChallenge,
+      learningPathInsights,
+      unlockedPaths: user.unlockedPaths,
+      dailyProblemCompletionRate,
+      challengeStats
+    });
   } catch (error) {
+    console.error("Profile Error:", error);
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/adaptive", protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const adaptivePayload = getAdaptivePayload(user);
+    await user.save();
+
+    res.json(adaptivePayload);
+  } catch (error) {
+    console.error("Adaptive Route Error:", error);
+    res.status(500).json({ message: "Error fetching adaptive recommendations" });
   }
 });
 
@@ -179,7 +310,15 @@ router.post("/update-progress", protect, async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     if (xpToAdd) {
-      user.xp = (user.xp || 0) + xpToAdd;
+      // ⚡ CHECK IF DOUBLE XP IS ACTIVE
+      let actualXp = xpToAdd;
+      if (user.doubleXpExpires && new Date() < user.doubleXpExpires) {
+        actualXp = xpToAdd * 2;
+      } else if (user.doubleXpExpires && new Date() >= user.doubleXpExpires) {
+        // 🕐 DOUBLE XP EXPIRED - CLEAR IT
+        user.doubleXpExpires = null;
+      }
+      user.xp = (user.xp || 0) + actualXp;
     }
 
     const oldLevel = user.level || 1;
@@ -190,10 +329,18 @@ router.post("/update-progress", protect, async (req, res) => {
     }
 
     const progressKey = `${moduleId}-${moduleIndex}`;
-    if (!user.completedModules.includes(progressKey)) {
+    const isNewModule = !user.completedModules.includes(progressKey);
+    if (isNewModule) {
       user.completedModules.push(progressKey);
+      updateSkillsFromModule(user, moduleId);
     }
 
+    const pathSummary = getLearningPathSummaries(user).find((path) => path.id === moduleId);
+    if (pathSummary && pathSummary.status === "Completed" && !user.completedPaths.includes(moduleId)) {
+      user.completedPaths.push(moduleId);
+    }
+
+    ensureUnlockedPaths(user);
     await user.save();
     res.json({
       message: "Progress saved",
@@ -225,23 +372,44 @@ router.put("/update-profile", protect, async (req, res) => {
 
 router.post("/complete-challenge", protect, async (req, res) => {
   try {
-    const { challengeId, xpAward, prerequisites } = req.body;
+    const { challengeId, xpAward, prerequisites, score } = req.body;
     const user = await User.findById(req.user.id);
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
     if (prerequisites && prerequisites.length > 0) {
-      const met = prerequisites.every(id => user.completedModules.includes(id));
+      const met = prerequisites.every((id) => user.completedModules.includes(id));
       if (!met) return res.status(403).json({ message: "Prerequisites not met!" });
     }
 
-    if (user.completedChallenges.includes(challengeId)) {
+    const isNewChallenge = !user.completedChallenges.includes(challengeId);
+    if (!isNewChallenge) {
       return res.status(400).json({ message: "Challenge already completed" });
     }
 
+    user.challengeAttempts = (user.challengeAttempts || 0) + 1;
+    if (score !== undefined && score !== null) {
+      user.challengeScores = [...(user.challengeScores || []), score];
+      user.averageScore = Math.round(
+        user.challengeScores.reduce((sum, value) => sum + value, 0) / user.challengeScores.length
+      );
+    }
+
     user.completedChallenges.push(challengeId);
-    user.xp = (user.xp || 0) + xpAward;
+    updateSkillsFromChallenge(user, challengeId);
+
+    // ⚡ CHECK IF DOUBLE XP IS ACTIVE
+    let actualXp = xpAward;
+    if (user.doubleXpExpires && new Date() < user.doubleXpExpires) {
+      actualXp = xpAward * 2;
+    } else if (user.doubleXpExpires && new Date() >= user.doubleXpExpires) {
+      // 🕐 DOUBLE XP EXPIRED - CLEAR IT
+      user.doubleXpExpires = null;
+    }
+    
+    user.xp = (user.xp || 0) + actualXp;
     user.level = Math.floor(user.xp / 2000) + 1;
+    ensureUnlockedPaths(user);
     await user.save();
 
     res.json({
@@ -251,6 +419,60 @@ router.post("/complete-challenge", protect, async (req, res) => {
   } catch (error) {
     console.error("Challenge Completion Error:", error);
     res.status(500).json({ message: "Error completing challenge" });
+  }
+});
+
+router.post("/challenge-attempt", protect, async (req, res) => {
+  try {
+    const { challengeId, score, success, xpAward = 0, prerequisites = [] } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (prerequisites.length > 0) {
+      const met = prerequisites.every((id) => user.completedModules.includes(id));
+      if (!met) return res.status(403).json({ message: "Prerequisites not met!" });
+    }
+
+    user.challengeAttempts = (user.challengeAttempts || 0) + 1;
+    if (!success) {
+      user.challengeFailures = (user.challengeFailures || 0) + 1;
+    }
+
+    if (score !== undefined && score !== null) {
+      user.challengeScores = [...(user.challengeScores || []), score];
+      user.averageScore = Math.round(
+        user.challengeScores.reduce((sum, value) => sum + value, 0) / user.challengeScores.length
+      );
+    }
+
+    if (success) {
+      if (user.completedChallenges.includes(challengeId)) {
+        return res.status(400).json({ message: "Challenge already completed" });
+      }
+
+      user.completedChallenges.push(challengeId);
+      updateSkillsFromChallenge(user, challengeId);
+
+      let actualXp = xpAward;
+      if (user.doubleXpExpires && new Date() < user.doubleXpExpires) {
+        actualXp = xpAward * 2;
+      } else if (user.doubleXpExpires && new Date() >= user.doubleXpExpires) {
+        user.doubleXpExpires = null;
+      }
+      user.xp = (user.xp || 0) + actualXp;
+      user.level = Math.floor(user.xp / 2000) + 1;
+    }
+
+    ensureUnlockedPaths(user);
+    await user.save();
+
+    res.json({
+      message: success ? "Challenge attempt completed" : "Challenge attempt recorded",
+      user
+    });
+  } catch (error) {
+    console.error("Challenge Attempt Error:", error);
+    res.status(500).json({ message: "Error recording challenge attempt" });
   }
 });
 

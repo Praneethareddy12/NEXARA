@@ -17,6 +17,7 @@ router.post("/buy", protect, async (req, res) => {
     const { itemId } = req.body;
 
     const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     const item = ITEMS[itemId];
     if (!item) return res.status(400).json({ message: "Invalid item" });
@@ -27,9 +28,21 @@ router.post("/buy", protect, async (req, res) => {
 
     user.coins -= item.price;
 
-    // ADD TO INVENTORY
-    user.inventory[itemId] += 1;
+    // HANDLE FREEZE SPECIALLY - ACTIVATE IMMEDIATELY
+    if (itemId === "freeze") {
+      if (user.streakFreezeActive) {
+        return res.status(400).json({ message: "You already have an active freeze!" });
+      }
+      user.streakFreezeActive = true;
+      await user.save();
+      return res.json({
+        message: "Streak Freeze Activated!",
+        user
+      });
+    }
 
+    // ALL OTHER ITEMS - ADD TO INVENTORY
+    user.inventory[itemId] += 1;
     await user.save();
 
     res.json({
@@ -37,40 +50,71 @@ router.post("/buy", protect, async (req, res) => {
       user
     });
   } catch (err) {
+    console.error("Shop Buy Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// ❄️ ACTIVATE STREAK FREEZE (USE FROM INVENTORY)
-router.post("/activate-freeze", protect, async (req, res) => {
-  const user = await User.findById(req.user.id);
-
-  if (user.inventory.freeze <= 0) {
-    return res.status(400).json({ message: "No freeze available" });
-  }
-
-  user.inventory.freeze -= 1;
-  user.streakFreezeActive = true;
-
-  await user.save();
-
-  res.json({ message: "Streak Freeze Activated!" });
-});
-
 // ⚡ ACTIVATE DOUBLE XP
 router.post("/activate-doublexp", protect, async (req, res) => {
-  const user = await User.findById(req.user.id);
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-  if (user.inventory.doublexp <= 0) {
-    return res.status(400).json({ message: "No Double XP available" });
+    if (user.inventory.doublexp <= 0) {
+      return res.status(400).json({ message: "No Double XP available" });
+    }
+
+    user.inventory.doublexp -= 1;
+    user.doubleXpExpires = new Date(Date.now() + 2 * 60 * 60 * 1000);
+
+    await user.save();
+
+    res.json({ message: "Double XP Activated!", user });
+  } catch (err) {
+    console.error("Activate Double XP Error:", err);
+    res.status(500).json({ message: "Server error" });
   }
+});
 
-  user.inventory.doublexp -= 1;
-  user.activeEffects.doubleXP = new Date(Date.now() + 2 * 60 * 60 * 1000);
+// 💡 USE HINT TOKEN
+router.post("/use-hint", protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-  await user.save();
+    if (user.inventory.hint <= 0) {
+      return res.status(400).json({ message: "No hints available" });
+    }
 
-  res.json({ message: "Double XP Activated!" });
+    user.inventory.hint -= 1;
+    await user.save();
+
+    res.json({ message: "Hint Used!", user });
+  } catch (err) {
+    console.error("Use Hint Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ⏭️ USE SKIP TOKEN
+router.post("/use-skip", protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (user.inventory.skip <= 0) {
+      return res.status(400).json({ message: "No skips available" });
+    }
+
+    user.inventory.skip -= 1;
+    await user.save();
+
+    res.json({ message: "Challenge Skipped!", user });
+  } catch (err) {
+    console.error("Use Skip Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
 export default router;

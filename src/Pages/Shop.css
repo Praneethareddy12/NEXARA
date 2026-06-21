@@ -91,6 +91,60 @@
   cursor: not-allowed;
 }
 
+.activate-btn {
+  background: #10b981;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.activate-btn:hover {
+  background: #059669;
+}
+
+.activate-btn:disabled {
+  background: gray;
+  cursor: not-allowed;
+}
+
+/* INVENTORY COUNT */
+.inventory-count {
+  background: #3a3a50;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 14px;
+  margin: 10px 0;
+  text-align: center;
+  color: #a0aec0;
+}
+
+.inventory-count strong {
+  color: #facc15;
+}
+
+/* ACTIVE TIMER */
+.active-timer {
+  background: #7c3aed;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin: 10px 0;
+  text-align: center;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 /* STATES */
 .owned {
   border: 2px solid #10b981;
@@ -109,6 +163,11 @@
   padding: 5px 10px;
   border-radius: 20px;
   font-size: 12px;
+}
+
+.owned-badge {
+  background: #3b82f6;
+  top: 45px;
 }
 
 /* LOADING */

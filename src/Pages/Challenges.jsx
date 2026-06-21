@@ -9,6 +9,7 @@ export default function Challenges() {
   const navigate = useNavigate();
   const [completed, setCompleted] = useState([]);
   const [level, setLevel] = useState(1);
+  const [recommendedChallenge, setRecommendedChallenge] = useState(null);
   const allIds = Object.keys(CHALLENGE_MAP);
 
   useEffect(() => {
@@ -17,6 +18,7 @@ export default function Challenges() {
         const res = await api.get("/api/auth/profile");
         setCompleted(res.data.completedModules || []);
         setLevel(res.data.level || 1);
+          setRecommendedChallenge(res.data.recommendedChallenge || null);
       } catch (err) { console.error("Failed to fetch progress"); }
     };
     fetchProgress();
@@ -30,11 +32,18 @@ export default function Challenges() {
   };
 
   return (
-    <div className="dashboard-wrapper">
-    <Navbar />
-    <div className="arena-container">
-      <h1>Challenge Arena ⚔️</h1>
-      <p>Test your skills with real-world data science challenges</p>
+    <div className="challenges-wrapper">
+      <Navbar />
+      <div className="arena-container">
+        <h1>Challenge Arena ⚔️</h1>
+        <p>Test your skills with real-world data science challenges</p>
+
+        {recommendedChallenge && (
+          <div className="adaptive-card">
+            <h3>Recommended Challenge</h3>
+            <p>{CHALLENGE_MAP[recommendedChallenge.id]?.title || "Explore your next skill challenge."}</p>
+          </div>
+        )}
 
       <h2>Challenges</h2>
       <div className="card-grid">

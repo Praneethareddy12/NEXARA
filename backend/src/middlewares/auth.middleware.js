@@ -1,11 +1,13 @@
-import jwt from "jsonwebtoken";
+/*import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+//..............
+
 
 /**
  * Protect middleware to secure routes.
  * It expects an Authorization header in the format: "Bearer <token>"
  */
-export const protect = async (req, res, next) => {
+/*export const protect = async (req, res, next) => {
   let token;
 
   // 1. Check if Authorization header exists and starts with 'Bearer'
@@ -37,5 +39,60 @@ export const protect = async (req, res, next) => {
   // 5. Handle case where no token is provided
   if (!token) {
     return res.status(401).json({ message: "Not authorized, no token provided" });
+  }
+};*/
+
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
+
+export const protect = async (req, res, next) => {
+  try {
+    console.log("========== AUTH CHECK ==========");
+    console.log("Authorization Header:", req.headers.authorization);
+
+    let token;
+
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer")
+    ) {
+      token = req.headers.authorization.split(" ")[1];
+
+      console.log("Token Found:", token ? "YES" : "NO");
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+      console.log("Decoded Token:", decoded);
+
+      const user = await User.findById(decoded.id).select("-password");
+
+      console.log("User Found:", user ? user.email : "NO USER");
+
+      if (!user) {
+        return res.status(401).json({
+          message: "User not found with this token",
+        });
+      }
+
+      req.user = user;
+
+      console.log("AUTH SUCCESS");
+      console.log("===============================");
+
+      return next();
+    }
+
+    return res.status(401).json({
+      message: "Not authorized, no token provided",
+    });
+  } catch (err) {
+    console.error("========== AUTH ERROR ==========");
+    console.error(err);
+    console.error("===============================");
+
+    return res.status(401).json({
+      message: "Not authorized, token failed",
+      error: err.message,
+    });
   }
 };

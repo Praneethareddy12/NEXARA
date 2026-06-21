@@ -67,18 +67,29 @@ export default function Shop() {
     }
 
     try {
-      let res;
-
-      if (item.id === "freeze") {
-        res = await api.post("/api/auth/buy-freeze");
-      } else {
-        res = await api.post("/api/shop/buy", { itemId: item.id });
-      }
-
+      const res = await api.post("/api/shop/buy", { itemId: item.id });
       setMessage(res.data.message || "Purchased!");
       fetchUserData();
     } catch (err) {
       setMessage(err.response?.data?.message || "Purchase failed");
+    }
+
+    setTimeout(() => setMessage(""), 3000);
+  };
+
+  const handleActivate = async (itemId) => {
+    try {
+      const endpoints = {
+        doublexp: "/api/shop/activate-doublexp",
+        hint: "/api/shop/use-hint",
+        skip: "/api/shop/use-skip"
+      };
+
+      const res = await api.post(endpoints[itemId]);
+      setMessage(res.data.message || "Activated!");
+      fetchUserData();
+    } catch (err) {
+      setMessage(err.response?.data?.message || "Activation failed");
     }
 
     setTimeout(() => setMessage(""), 3000);
@@ -114,6 +125,8 @@ export default function Shop() {
           {SHOP_ITEMS.map((item) => {
             const isOwned =
               item.id === "freeze" && user?.streakFreezeActive;
+            const inventoryCount = user?.inventory?.[item.id] || 0;
+            const isDoubleXpActive = user?.doubleXpExpires && new Date() < new Date(user.doubleXpExpires);
 
             return (
               <div
@@ -127,29 +140,70 @@ export default function Shop() {
                 <h3>{item.name}</h3>
                 <p>{item.desc}</p>
 
+                {/* SHOW INVENTORY COUNT */}
+                {inventoryCount > 0 && item.id !== "freeze" && (
+                  <div className="inventory-count">
+                    In Inventory: <strong>{inventoryCount}</strong>
+                  </div>
+                )}
+
+                {/* SHOW DOUBLE XP TIMER */}
+                {isDoubleXpActive && item.id === "doublexp" && (
+                  <div className="active-timer">
+                    ✨ Active! Expires soon
+                  </div>
+                )}
+
                 <div className="shop-footer">
                   <span>{item.price} Coins</span>
 
-                  <button
-                    className="buy-btn"
-                    disabled={
-                      item.locked ||
-                      isOwned ||
-                      user.coins < item.price
-                    }
-                    onClick={() => handleBuy(item)}
-                  >
-                    {item.locked
-                      ? "Locked"
-                      : isOwned
-                      ? "Active"
-                      : user.coins < item.price
-                      ? "Not Enough"
-                      : "Buy"}
-                  </button>
+                  {/* BUY BUTTON (for new purchases) */}
+                  {inventoryCount === 0 && item.id !== "freeze" && (
+                    <button
+                      className="buy-btn"
+                      disabled={
+                        item.locked ||
+                        user.coins < item.price
+                      }
+                      onClick={() => handleBuy(item)}
+                    >
+                      {item.locked
+                        ? "Locked"
+                        : user.coins < item.price
+                        ? "Not Enough"
+                        : "Buy"}
+                    </button>
+                  )}
+
+                  {/* FREEZE - SPECIAL CASE */}
+                  {item.id === "freeze" && (
+                    <button
+                      className="buy-btn"
+                      disabled={
+                        isOwned ||
+                        user.coins < item.price
+                      }
+                      onClick={() => handleBuy(item)}
+                    >
+                      {isOwned ? "Active" : user.coins < item.price ? "Not Enough" : "Buy"}
+                    </button>
+                  )}
+
+                  {/* ACTIVATE BUTTON (for owned items) */}
+                  {inventoryCount > 0 && item.id !== "freeze" && (
+                    <button
+                      className="activate-btn"
+                      onClick={() => handleActivate(item.id)}
+                    >
+                      Use
+                    </button>
+                  )}
                 </div>
 
                 {isOwned && <div className="badge">Equipped</div>}
+                {inventoryCount > 0 && item.id !== "freeze" && (
+                  <div className="badge owned-badge">Owned</div>
+                )}
               </div>
             );
           })}

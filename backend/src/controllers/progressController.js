@@ -20,16 +20,26 @@ export const completeChallenge = async (req, res) => {
             return res.status(400).json({ message: "Challenge already completed" });
         }
 
+        // ⚡ CHECK IF DOUBLE XP IS ACTIVE
+        let actualXp = xpEarned || 0;
+        if (user.doubleXpExpires && new Date() < user.doubleXpExpires) {
+            actualXp = (xpEarned || 0) * 2;
+        } else if (user.doubleXpExpires && new Date() >= user.doubleXpExpires) {
+            // 🕐 DOUBLE XP EXPIRED - CLEAR IT
+            user.doubleXpExpires = null;
+        }
+
         // Add to completed challenges and update XP
         user.completedChallenges = [...(user.completedChallenges || []), challengeId];
-        user.xp = (user.xp || 0) + (xpEarned || 0);
+        user.xp = (user.xp || 0) + actualXp;
         
         await user.save();
 
         res.status(200).json({ 
             message: "Progress saved!", 
             newXp: user.xp,
-            completedChallenges: user.completedChallenges 
+            completedChallenges: user.completedChallenges,
+            doubleXpActive: user.doubleXpExpires && new Date() < user.doubleXpExpires
         });
     } catch (error) {
         console.error("Update error:", error);

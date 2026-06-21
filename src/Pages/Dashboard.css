@@ -136,6 +136,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.calendar-item:hover {
+  transform: translateY(-2px);
 }
 
 .day {
@@ -153,4 +159,111 @@
   font-size: 11px;
   color: #aaa;
   margin-top: 2px;
+}
+
+/* DAILY PROBLEM CARD */
+.daily-problem-card {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  margin: 20px 0;
+}
+
+.daily-subtitle {
+  color: #e0e0e0;
+  font-size: 14px;
+  margin: 5px 0 15px 0;
+}
+
+.daily-problems-list {
+  margin: 20px 0;
+}
+
+.daily-problem-item {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  border-left: 4px solid #fbbf24;
+}
+
+.problem-info h4 {
+  margin: 0 0 8px 0;
+  color: #fbbf24;
+}
+
+.problem-info p {
+  margin: 0 0 10px 0;
+  color: #d1d5db;
+  font-size: 14px;
+}
+
+.problem-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.problem-meta span {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.problem-meta .difficulty {
+  background: #f87171;
+  color: white;
+}
+
+.problem-meta .reward {
+  color: #fbbf24;
+}
+
+.solve-btn {
+  width: 100%;
+  background: #fbbf24;
+  color: #1e1e2f;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+  margin-top: 15px;
+}
+
+.solve-btn:hover {
+  background: #f59e0b;
+  transform: scale(1.02);
+}
+
+.daily-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 15px;
+}
+
+.link-btn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.link-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.solved-banner {
+  background: #10b981;
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 500;
+  margin: 15px 0;
 }
